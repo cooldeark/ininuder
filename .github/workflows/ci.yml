@@ -3,7 +3,7 @@ name: Python CI
 on:
   push:
     branches:
-      - master
+      - dev
 
 jobs:
   build:
@@ -32,6 +32,6 @@ jobs:
     #   run: git commit -am "Passed tests"
 
     - name: Push changes
-      uses: ad-m/github-push-action@master
+      uses: ad-m/github-push-action@dev
       with:
         github_token: ${{ secrets.MY_TOKEN }}
