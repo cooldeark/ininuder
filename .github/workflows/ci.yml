@@ -32,6 +32,9 @@ jobs:
     #   run: git commit -am "Passed tests"
 
     - name: Push changes
-      uses: ad-m/github-push-action@dev
+      uses: ad-m/github-push-action@master
       with:
+        # repository: <target-repository>  # 目标仓库的所有者和名称，例如 ad-m/my-repo
+        branch: dev  # 要推送到的目标分支
+        # directory: <path-to-directory>  # 要推送的目录路径
         github_token: ${{ secrets.MY_TOKEN }}
