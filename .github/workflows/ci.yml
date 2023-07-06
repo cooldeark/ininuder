@@ -13,21 +13,35 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: SSH into GCP instance
+      uses: appleboy/ssh-action@master
       with:
-        python-version: 3.x
+        host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
+        username: cooldeark
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          sudo docker exec -it veriscope-internal-laravel.test-1 bash
+          cd tests
+          pytest
 
-    - name: Install system dependencies
-      run: sudo apt update && sudo apt install -y python-pytest
+    # - name: Set up Python
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.x
 
-    - name: Install dependencies
+    # - name: Install system dependencies
+    #   run: sudo apt update && sudo apt install -y python-pytest
+
+    # - name: Install dependencies
+      # no need to used requirement so remark
       # run: pip install -r requirements.txt
-      run: sudo pip install -U requests && sudo pip install -U pytest pytest-html
+      # run: sudo pip install -U requests && sudo pip install -U pytest pytest-html
 
-    - name: Run tests
-      run: pytest
+    # No need to run in jenkins
+    # - name: Run tests
+    #   run: pytest
 
+    # No need to commit again, so remart this part
     # - name: Commit changes
     #   run: git commit -am "Passed tests"
 
