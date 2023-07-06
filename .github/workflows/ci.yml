@@ -19,10 +19,8 @@ jobs:
         host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
         username: james
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
-        # protected tty issue
-        args: -T
         script: |
-          sudo docker exec -it veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
+          sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
 
     # - name: Set up Python
     #   uses: actions/setup-python@v2
