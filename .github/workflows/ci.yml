@@ -20,9 +20,7 @@ jobs:
         username: james
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
-          sudo docker exec -it veriscope-internal-laravel.test-1 bash
-          cd /opt/veriscope/tests
-          pytest
+          sudo docker exec -it veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
 
     # - name: Set up Python
     #   uses: actions/setup-python@v2
