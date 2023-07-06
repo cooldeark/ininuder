@@ -20,7 +20,7 @@ jobs:
         username: james
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         # protected tty issue
-        args: -tt
+        args: -T
         script: |
           sudo docker exec -it veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
 
