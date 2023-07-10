@@ -20,7 +20,9 @@ jobs:
         username: james
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout main"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout main && git pull origin main"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_dashboard && composer install && php artisan migrate && php artisan config:clear && php artisan cache:clear && npm run dev"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_node && npm install && systemctl restart ta-node-1"
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
 
     # - name: Set up Python
