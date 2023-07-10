@@ -13,10 +13,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Switch Git branch in Docker container
-      run: |
-        sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout main"
-
     - name: SSH into GCP instance
       uses: appleboy/ssh-action@master
       with:
