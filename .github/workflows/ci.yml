@@ -13,17 +13,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: SSH into GCP instance
+    - name: SSH into GCP instance and end-to-end testing
+      env:
+          DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}
+          DEV_API_AUTH_TOKEN: ${{ secrets.DEV_API_AUTH_TOKEN }}
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
         username: james
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout main && git pull origin main"
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_dashboard && composer install && php artisan migrate && php artisan config:clear && php artisan cache:clear && npm run dev"
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_node && npm install && systemctl restart ta-node-1"
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
+          sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py
+
+
+# sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout main && git pull origin main"
+#           sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_dashboard && composer install && php artisan migrate && php artisan config:clear && php artisan cache:clear && npm run dev"
+#           sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_node && npm install && systemctl restart ta-node-1"
 
     # - name: Set up Python
     #   uses: actions/setup-python@v2
