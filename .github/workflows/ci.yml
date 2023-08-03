@@ -17,13 +17,14 @@ jobs:
       env:
           DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}
           DEV_API_AUTH_TOKEN: ${{ secrets.DEV_API_AUTH_TOKEN }}
+          DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
         username: james
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "echo '$DEV_TEST_URL $DEV_API_AUTH_TOKEN' > pytest_value.txt"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "echo '$DEV_TEST_URL $DEV_API_AUTH_TOKEN $DEV_SSH_PRIVATE_KEY' > pytest_value.txt"
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py
           sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
