@@ -6,19 +6,19 @@ on:
       - dev
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-20.04
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: SSH into GCP instance and end-to-end testing
-    # This is for ubuntu used params
+    - name: SSH into GCP instance and run tests
+      # This is for ubuntu used params
       env:
-          DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}
-          DEV_API_AUTH_TOKEN: ${{ secrets.DEV_API_AUTH_TOKEN }}
-          DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}
+        DEV_API_AUTH_TOKEN: ${{ secrets.DEV_API_AUTH_TOKEN }}
+        DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
@@ -29,6 +29,21 @@ jobs:
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py
           sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
+
+  push-if-tests-pass:
+    needs: build-and-test
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Push to dev branch
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        branch: dev
+        github_token: ${{ secrets.MY_TOKEN }}
+
 
 
 # sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout main && git pull origin main"
@@ -56,10 +71,10 @@ jobs:
     # - name: Commit changes
     #   run: git commit -am "Passed tests"
 
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        # repository: <target-repository>  # 目标仓库的所有者和名称，例如 ad-m/my-repo
-        branch: dev  # 要推送到的目标分支
-        # directory: <path-to-directory>  # 要推送的目录路径
-        github_token: ${{ secrets.MY_TOKEN }}
+    # - name: Push changes
+    #   uses: ad-m/github-push-action@master
+    #   with:
+    #     # repository: <target-repository>  # 目标仓库的所有者和名称，例如 ad-m/my-repo
+    #     branch: dev  # 要推送到的目标分支
+    #     # directory: <path-to-directory>  # 要推送的目录路径
+    #     github_token: ${{ secrets.MY_TOKEN }}
