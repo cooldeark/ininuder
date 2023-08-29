@@ -27,9 +27,7 @@ jobs:
         username: james
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
-          # Create file for docker used
           sudo docker exec veriscope-internal-laravel.test-1 sh -c "echo '$DEV_TEST_URL $DEV_API_AUTH_TOKEN $DEV_SSH_PRIVATE_KEY' > pytest_value.txt"
-          # Testing test folder
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
           if [ $? -ne 0 ]; then exit 1; fi
 
