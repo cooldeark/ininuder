@@ -25,8 +25,7 @@ jobs:
         # Inside with parameters are ssh need the values
         # host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
         host: ${{ secrets.SCRIPT_INSTANCE_IP }}
-        # username: james
-        username: cooldeark
+        username: james
         # key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         key: ${{ secrets.SCRIPT_INSTANCE_SSH_PRIVATE }}
         script: |
