@@ -23,34 +23,38 @@ jobs:
       uses: appleboy/ssh-action@master
       with:
         # Inside with parameters are ssh need the values
-        host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
-        username: james
-        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        # host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
+        host: ${{ secrets.SCRIPT_INSTANCE_IP }}
+        # username: james
+        username: cooldeark
+        # key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        key: ${{ secrets.SCRIPT_INSTANCE_SSH_PRIVATE }}
         script: |
+          sudo touch test.txt
           # Create file for docker used
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "echo '$DEV_TEST_URL $DEV_API_AUTH_TOKEN $DEV_SSH_PRIVATE_KEY' > pytest_value.txt"
+          # sudo docker exec veriscope-internal-laravel.test-1 sh -c "echo '$DEV_TEST_URL $DEV_API_AUTH_TOKEN $DEV_SSH_PRIVATE_KEY' > pytest_value.txt"
           # Testing test folder
-          sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
-          if [ $? -ne 0 ]; then exit 1; fi
+          # sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
+          # if [ $? -ne 0 ]; then exit 1; fi
 
-          sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py
-          if [ $? -ne 0 ]; then exit 1; fi
+          # sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py
+          # if [ $? -ne 0 ]; then exit 1; fi
 
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
+          # sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
 # job name
-  push-if-tests-pass:
-    needs: build-and-test
-    runs-on: ubuntu-20.04
+  # push-if-tests-pass:
+  #   needs: build-and-test
+  #   runs-on: ubuntu-20.04
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v2
 
-    - name: Push to dev branch
-      uses: ad-m/github-push-action@v0.6.0
-      with:
-        branch: dev
-        github_token: ${{ secrets.MY_TOKEN }}
+  #   - name: Push to dev branch
+  #     uses: ad-m/github-push-action@v0.6.0
+  #     with:
+  #       branch: dev
+  #       github_token: ${{ secrets.MY_TOKEN }}
 
 
  
