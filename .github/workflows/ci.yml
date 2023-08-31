@@ -8,17 +8,17 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-20.04
-    # This is for ubuntu used params
-    env:
-      DEV_TEST_URL: '${{ secrets.DEV_TEST_URL }}'
-      DEV_API_AUTH_TOKEN: fuck
-      DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
     - name: SSH into GCP instance and run tests
+    # This is for ubuntu used params
+      env:
+        DEV_TEST_URL: '${{ secrets.DEV_TEST_URL }}'
+        DEV_API_AUTH_TOKEN: fuck
+        DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
       # This is method to ssh instance
       uses: appleboy/ssh-action@master
       with:
