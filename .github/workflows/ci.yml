@@ -38,10 +38,16 @@ jobs:
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
           if [ $? -ne 0 ]; then exit 1; fi
           # Testing end-to-end
-          sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py3
+          sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py4
           if [ $? -ne 0 ]; then exit 1; fi
 
           sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
+    # Use if condition to prevent push on test failure
+    - name: Prevent Push on Test Failure
+      if: ${{ failure() }}
+      run: |
+        echo "Tests failed. Preventing push to branch."
+        continue-on-error: false
 # job name
   # push-if-tests-pass:
   #   needs: build-and-test
