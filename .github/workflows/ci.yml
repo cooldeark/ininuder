@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-20.04
-    # This is for ubuntu used params
+    # This is for ubuntu used params, but it cannot be used
     env:
       DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}
       DEV_API_AUTH_TOKEN: ${{ secrets.DEV_API_AUTH_TOKEN }}
@@ -31,20 +31,17 @@ jobs:
         # script instance
         # key: ${{ secrets.SCRIPT_INSTANCE_SSH_PRIVATE }}
         script: |
-          echo "DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}"
-          echo "DEV_API_AUTH_TOKEN: ${DEV_API_AUTH_TOKEN}"
-          echo "DEV_SSH_PRIVATE_KEY: ${DEV_SSH_PRIVATE_KEY}"
 
           # Create file for docker used
           sudo docker exec veriscope-internal-laravel.test-1 sh -c "echo '${{ secrets.DEV_TEST_URL }} ${{ secrets.DEV_API_AUTH_TOKEN }} ${{ secrets.DEV_SSH_PRIVATE_KEY }}' > pytest_value.txt"
           # Testing test folder
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
           if [ $? -ne 0 ]; then exit 1; fi
-
-          sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py
+          # Testing end-to-end
+          sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py1
           if [ $? -ne 0 ]; then exit 1; fi
 
-          # sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
 # job name
   # push-if-tests-pass:
   #   needs: build-and-test
