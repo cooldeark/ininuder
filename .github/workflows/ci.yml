@@ -10,16 +10,13 @@ jobs:
     runs-on: ubuntu-20.04
     # This is for ubuntu used params
     env:
-      DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}
-      DEV_API_AUTH_TOKEN: ${{ secrets.DEV_API_AUTH_TOKEN }}
+      DEV_TEST_URL: '${{ secrets.DEV_TEST_URL }}'
+      DEV_API_AUTH_TOKEN: fuck
       DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
-    - name: Print Job Env Variable
-      script: echo ${DEV_SSH_PRIVATE_KEY}
 
     - name: SSH into GCP instance and run tests
       # This is method to ssh instance
