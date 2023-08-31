@@ -34,7 +34,7 @@ jobs:
         # script instance
         # key: ${{ secrets.SCRIPT_INSTANCE_SSH_PRIVATE }}
         script: |
-          echo "DEV_TEST_URL: ${DEV_TEST_URL}"
+          echo "DEV_TEST_URL: $DEV_TEST_URL"
           echo "DEV_API_AUTH_TOKEN: ${DEV_API_AUTH_TOKEN}"
           echo "DEV_SSH_PRIVATE_KEY: ${DEV_SSH_PRIVATE_KEY}"
 
