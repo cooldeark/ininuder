@@ -32,7 +32,7 @@ jobs:
       with:
         # Inside with parameters are ssh need the values
         host: ${{ secrets.VERISCOPE_DEV_EC2_IP }}
-        username: veris
+        username: cooldeark
         key: ${{ secrets.VERISCOPE_DEV_EC2_CICD }}
         script: |
           touch test.txt
