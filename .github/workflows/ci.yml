@@ -14,7 +14,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test:
+  build-testing-env:
+    runs-on: ubuntu-20.04
+    # This is for ubuntu used params, but it cannot be used
+    env:
+      DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}
+      DEV_API_AUTH_TOKEN: ${{ secrets.DEV_API_AUTH_TOKEN }}
+      DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: SSH into GCP instance and build veriscope
+      # This is method to ssh instance
+      uses: appleboy/ssh-action@master
+      with:
+        # Inside with parameters are ssh need the values
+        host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
+        username: james
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout james-unittest-postmanAPI && git pull origin james-unittest-postmanAPI"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_dashboard && composer install && php artisan migrate && php artisan config:clear && php artisan cache:clear && npm run dev"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_node && npm install && systemctl restart ta-node-1"
+
+  run-testing:
     runs-on: ubuntu-20.04
     # This is for ubuntu used params, but it cannot be used
     env:
@@ -36,11 +62,6 @@ jobs:
         key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
         script: |
 
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout james-unittest-postmanAPI && git pull origin james-unittest-postmanAPI"
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_dashboard && composer install && php artisan migrate && php artisan config:clear && php artisan cache:clear && npm run dev"
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_node && npm install && systemctl restart ta-node-1"
-          if [ $? -ne 0 ]; then exit 1; fi
-
           # Create file for docker used
           sudo docker exec veriscope-internal-laravel.test-1 sh -c "echo '${{ secrets.DEV_TEST_URL }} ${{ secrets.DEV_API_AUTH_TOKEN }} ${{ secrets.DEV_SSH_PRIVATE_KEY }}' > pytest_value.txt"
           # Testing test folder
@@ -50,7 +71,7 @@ jobs:
           sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py
           if [ $? -ne 0 ]; then exit 1; fi
 
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"  
     # Use if condition to prevent push on test failure
     # - name: Prevent Push on Test Failure
     #   if: ${{ failure() }}
