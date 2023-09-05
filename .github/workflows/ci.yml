@@ -41,6 +41,8 @@ jobs:
           sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_node && npm install && systemctl restart ta-node-1"
 
   run-testing:
+    # needs: this is using for when which job finished then run this 
+    needs: build-testing-env
     runs-on: ubuntu-20.04
     # This is for ubuntu used params, but it cannot be used
     env:
