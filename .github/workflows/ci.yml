@@ -92,7 +92,7 @@ jobs:
         script: |
 
           # Run unittest
-          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && ./vendor/bin/phpunit tests/Unit/ExampleTest.php"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_dashboard && ./vendor/bin/phpunit tests/"
           if [ $? -ne 0 ]; then exit 1; fi
 
 
