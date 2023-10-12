@@ -96,8 +96,6 @@ jobs:
           if [ $? -ne 0 ]; then exit 1; fi
 
 
-
-
     # Use if condition to prevent push on test failure
     # - name: Prevent Push on Test Failure
     #   if: ${{ failure() }}
