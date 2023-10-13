@@ -1,37 +1,168 @@
 name: Python CI
 
+# when push the code into branch will trigger the workflow
+# on:
+#   push:
+#     branches:
+#       - dev
+
 on:
-  push:
-    branches:
-      - dev
+  pull_request:
+    types:
+      - opened
+      - synchronize
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-testing-env:
     runs-on: ubuntu-20.04
+    # This is for ubuntu used params, but it cannot be used
+    env:
+      DEV_TEST_URL: ${{ secrets.DEV_TEST_URL }}
+      DEV_API_AUTH_TOKEN: ${{ secrets.DEV_API_AUTH_TOKEN }}
+      DEV_SSH_PRIVATE_KEY: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: SSH into GCP instance and build veriscope
+      # This is method to ssh instance
+      uses: appleboy/ssh-action@master
       with:
-        python-version: 3.x
+        # Inside with parameters are ssh need the values
+        host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
+        username: james
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
 
-    - name: Install system dependencies
-      run: sudo apt update && sudo apt install -y python-pytest
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope && git checkout james-unittest-postmanAPI && git pull origin james-unittest-postmanAPI"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_dashboard && composer install && php artisan migrate && php artisan config:clear && php artisan cache:clear && npm run dev"
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_node && npm install && systemctl restart ta-node-1"
 
-    - name: Install dependencies
+  API-testing:
+    # needs: this is using for when which job finished then run this 
+    needs: build-testing-env
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: SSH into GCP instance and run tests
+      # This is method to ssh instance
+      uses: appleboy/ssh-action@master
+      with:
+        # Inside with parameters are ssh need the values
+        host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
+        username: james
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+
+          # Create file for docker used
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "echo '${{ secrets.DEV_TEST_URL }} ${{ secrets.DEV_API_AUTH_TOKEN }} ${{ secrets.DEV_USER_PRIVATE_KEY }}' > pytest_value.txt"
+          # Testing test folder
+          sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/tests
+          if [ $? -ne 0 ]; then exit 1; fi
+          # Testing end-to-end
+          # sudo docker exec -i veriscope-internal-laravel.test-1 pytest -k test_get_jurisdictions /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test/test_postman_endpoint_success.py
+          sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-positive-test
+          if [ $? -ne 0 ]; then exit 1; fi
+
+          sudo docker exec -i veriscope-internal-laravel.test-1 pytest /opt/veriscope/API-Docs/API-Testing/postman-collection-API-testing/postman-collection-negative-test
+          if [ $? -ne 0 ]; then exit 1; fi
+
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "rm pytest_value.txt"
+
+  run-dashboard-unittest:
+    # needs: this is using for when which job finished then run this 
+    needs: API-testing
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: SSH into GCP instance and run dashboard unittest
+      # This is method to ssh instance
+      uses: appleboy/ssh-action@master
+      with:
+        # Inside with parameters are ssh need the values
+        host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
+        username: james
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+
+          # Run unittest
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/veriscope_ta_dashboard && ./vendor/bin/phpunit tests/"
+          if [ $? -ne 0 ]; then exit 1; fi
+
+  run-dashboard-dependencies-check:
+    # needs: this is using for when which job finished then run this 
+    needs: run-dashboard-unittest
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: SSH into GCP instance and run dashboard check
+      # This is method to ssh instance
+      uses: appleboy/ssh-action@master
+      with:
+        # Inside with parameters are ssh need the values
+        host: ${{ secrets.DEV_GCP_INSTANCE_IP }}
+        username: james
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+
+          # Run unittest
+          sudo docker exec veriscope-internal-laravel.test-1 sh -c "cd /opt/veriscope/API-Docs/API-Testing/Dependencies-Check && chmod +x dashboard-check.sh && ./dashboard-check.sh"
+          if [ $? -ne 0 ]; then exit 1; fi
+
+    # Use if condition to prevent push on test failure
+    # - name: Prevent Push on Test Failure
+    #   if: ${{ failure() }}
+    #   run: |
+    #     echo "Tests failed. Preventing push to branch."
+    #     continue-on-error: false
+# job name
+  # push-if-tests-pass:
+  #   needs: build-and-test
+  #   runs-on: ubuntu-20.04
+
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v2
+
+  #   - name: Push to dev branch
+  #     uses: ad-m/github-push-action@v0.6.0
+  #     with:
+  #       branch: dev
+  #       github_token: ${{ secrets.MY_TOKEN }}
+
+    # - name: Set up Python
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: 3.x
+
+    # - name: Install system dependencies
+    #   run: sudo apt update && sudo apt install -y python-pytest
+
+    # - name: Install dependencies
+      # no need to used requirement so remark
       # run: pip install -r requirements.txt
-      run: sudo pip install -U requests && sudo pip install -U pytest pytest-html
+      # run: sudo pip install -U requests && sudo pip install -U pytest pytest-html
 
-    - name: Run tests
-      run: pytest
+    # No need to run in jenkins
+    # - name: Run tests
+    #   run: pytest
 
+    # No need to commit again, so remart this part
     # - name: Commit changes
     #   run: git commit -am "Passed tests"
 
-    - name: Push changes
-      uses: ad-m/github-push-action@dev
-      with:
-        github_token: ${{ secrets.MY_TOKEN }}
+    # - name: Push changes
+    #   uses: ad-m/github-push-action@master
+    #   with:
+    #     # repository: <target-repository>  # 目标仓库的所有者和名称，例如 ad-m/my-repo
+    #     branch: dev  # 要推送到的目标分支
+    #     # directory: <path-to-directory>  # 要推送的目录路径
+    #     github_token: ${{ secrets.MY_TOKEN }}
